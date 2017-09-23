@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Bootstrap Template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css">
+    <style>
+        img {
+            height: 75px;
+            width: 75px;
+        }
+
+        #cardLogo {
+            height: 25px;
+            width: 25px;
+        }
+
+        #logoText {
+            height: 75px;
+            width: 300px;
+        }
+
+        .artDivs {
+            border: 1px solid #dcdcdc;
+        }
+
+        .bImg {
+            height: 20px;
+            width: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="containder">
+        <div class="row mt-2">
+            <div class="col-md-3"></div>
+            <div class="col-md-6 text-center">
+                <div class="bg-primary p-3 rounded">
+                    <img src="logo.png" alt="No img found" class="mr-4">
+                    <img src="logoText.png" alt="No img found" id="logoText">
+                </div>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6 mt-3">
+                <div class="card">
+                    <div class="bg-primary rounded">
+                        <img class="card-img-top bg-primary ml-2 my-1" src="logo.png" alt="Card image cap" id="cardLogo">
+                        <span class="font-weight-bold text-white">Search Parameters</span>
+                    </div>
+                    <div class="card-block">
+                        <form class="p-3">
+                            <div class="form-group">
+                                <label for="inputSearchTerm">Search Term</label>
+                                <input type="text" class="form-control" id="searchTerm">
+                            </div>
+                            <div class="form-group">
+                                <label for="recNum">Number of Records to Retrieve</label>
+                                <select class="form-control" id="selectRecNum">
+                                <option>2</option>
+                                <option>5</option>
+                                <option>10</option>                                
+                              </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="startYear">Start Year (optional)</label>
+                                <input type="text" class="form-control" id="startYear">
+                            </div>
+                            <div class="form-group">
+                                <label for="iendYear">End Year (optional)</label>
+                                <input type="text" class="form-control" id="endYear">
+                            </div>
+                            <button type="button" class="btn btn-primary mr-2" id="searchB">
+                                <img src="search.png" alt="no img" class="bImg">Search</button>
+                            <button type="reset" class="btn btn-primary" id="clearB">
+                                <img src="clear.png" alt="no img" class="bImg mr-1">Clear Search</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6 mt-3">
+                <div class="card">
+                    <div class="bg-primary rounded">
+                        <img class="card-img-top bg-primary ml-2 my-1" src="logo.png" alt="Card image cap" id="cardLogo">
+                        <span class="font-weight-bold text-white">Top Articles</span>
+                    </div>
+                    <div class="card-block p-2" id="resultsDiv"></div>
+                </div>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $().ready(function () {
+
+            var searchQuery;
+            var beginDate;
+            var endDate;
+            var recNum;
+            var counter = 1;
+
+            var resultHeading;
+            var resultAuthor;
+            var resultCat;
+            var resultDate;
+            var resultLink;
+
+            var createResults = function () {
+
+                var artDivs = $("<div>");
+                var cnt = $("<span>");
+                var artHeading = $("<h4>");
+                var artAuthor = $("<h6>");
+                var artCat = $("<h6>");
+                var artDate = $("<h6>");
+                var artLink = $("<a>");
+
+                artDivs.append(cnt);
+                artDivs.append(artHeading);
+                artDivs.addClass("artDivs rounded mb-2 p-2");
+                artHeading.addClass("d-inline");
+                cnt.addClass("bg-primary px-2 mr-2 font-weight-bold text-white rounded");
+                artDivs.append(artAuthor);
+                artDivs.append(artCat);
+                artDivs.append(artDate);
+                artDivs.append(artLink);
+                artLink.attr('target', "_blank");
+                artLink.text(resultLink);
+
+                artHeading.html(resultHeading);
+                artAuthor.html("<i>" + resultAuthor + "</i>");
+                artCat.html(resultCat);
+                artDate.html(resultDate.substring(0, 10));
+                artLink.attr('href', resultLink);
+                cnt.html(counter);
+
+                $("#resultsDiv").append(artDivs);
+
+            } //ends createResults function
+
+            $("#clearB").on("click", function () {
+                $("#resultsDiv").empty();
+                counter = 1;
+            });
+
+            $("#searchB").on("click", function () {
+                $("#resultsDiv").empty();
+                searchQuery = $("#searchTerm").val();
+                beginDate = $("#startYear").val();
+                endDate = $("#endYear").val();
+                recNum = $("#selectRecNum").val();
+                search(searchQuery);
+            });
+
+
+
+
+
+            function search(searchTerm) {
+                var site = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + searchTerm +
+                    "&page=0&sort=newest&api-key=e95ea7e8bfac4028831ce9a780033fde";                
+                counter = 1;
+                $.ajax({
+                    url: site,
+                    method: "GET"
+
+                }).done(function (response) {
+                    var newArray = response.response.docs;
+                    var len = newArray.length;
+
+                    for (var i = 0; i < recNum; i++) {
+                    
+                            resultHeading = response.response.docs[i].headline.main;
+                            resultAuthor = response.response.docs[i].byline.original;
+                            resultCat = response.response.docs[i].type_of_material;
+                            resultDate = response.response.docs[i].pub_date;
+                            resultLink = response.response.docs[i].web_url;
+                            createResults();
+                            counter++;              
+                     
+                    }
+
+
+
+                });
+
+            }
+        }); //ends document ready
+    </script>
+</body>
+
+</html>
